@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logowanie</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC0H_C_m7OLTujY0xj6QmC6YIcJoaEp1Ec",
+  authDomain: "mobywatel-cbfbe.firebaseapp.com",
+  projectId: "mobywatel-cbfbe"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: Inter, sans-serif;
+    background: radial-gradient(circle at top, #2a0040, #0b0b10 60%);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.box {
+    width: 340px;
+    padding: 30px;
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(160,0,255,0.25);
+    box-shadow: 0 0 40px rgba(0,0,0,0.6),
+                0 0 25px rgba(160,0,255,0.2);
+
+    text-align: center;
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(168,85,247,0.5);
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(160,0,255,0.3);
+    background: rgba(0,0,0,0.4);
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s;
+}
+
+input:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 15px rgba(168,85,247,0.4);
+    transform: scale(1.02);
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+
+    cursor: pointer;
+    background: linear-gradient(135deg, #6d28d9, #a855f7);
+
+    box-shadow: 0 0 20px rgba(168,85,247,0.4);
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.03);
+    filter: brightness(1.1);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+    <h2>Logowanie</h2>
+
+    <input id="code" placeholder="Wpisz kod">
+    <button onclick="checkCode()">Wejdź</button>
+</div>
+
+<script>
+async function checkCode() {
+    try {
+
+        const code = document.getElementById("code").value;
+
+        if (!code) {
+            alert("Wpisz kod");
+            return;
+        }
+
+        const ref = db.collection("codes").doc(code);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            alert("Zły kod");
+            return;
+        }
+
+        const data = doc.data();
+        const now = Date.now();
+
+        // 🔒 użyty
+        if (data.used === true) {
+            alert("Kod już użyty");
+            return;
+        }
+
+        // ⏱️ wygasł (2 min)
+        if (data.expires && now > data.expires) {
+            alert("Kod wygasł");
+            return;
+        }
+
+        // ✅ oznacz jako użyty
+        await ref.update({ used: true });
+
+        alert("OK");
+        window.location.href = "przekierowanie.html";
+
+    } catch (err) {
+        console.log(err);
+        alert("Błąd połączenia z bazą");
+    }
+}
+</script>
+
+</body>
+</html>
